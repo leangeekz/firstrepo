@@ -1,0 +1,34 @@
+from pymongo import MongoClient
+from bson.objectid import ObjectId
+import math
+
+def get_id_ranges_for_chunks(collection_name, number_of_chunks):
+    collection = source_db[collection_name]
+    min_id = collection.find_one(sort=[('_id', 1)])['_id']
+    max_id = collection.find_one(sort=[('_id', -1)])['_id']
+    
+    # Calculate the step size for each chunk
+    step = (max_id.generation_time - min_id.generation_time) / number_of_chunks
+    
+    # Generate the ObjectId for each range
+    ranges = [
+        (
+            ObjectId.from_datetime(min_id.generation_time + step * i),
+            ObjectId.from_datetime(min_id.generation_time + step * (i + 1))
+        )
+        for i in range(number_of_chunks)
+    ]
+    
+    # Make sure the last chunk ends with the max_id
+    ranges[-1] = (ranges[-1][0], max_id)
+    
+    return ranges
+
+# Example usage:
+source_db = MongoClient('mongodb://source_server')['source_database']
+chunk_ranges = get_id_ranges_for_chunks('large_collection', 10)  # Split into 10 chunks
+
+for start_id, end_id in chunk_ranges:
+    # Now you can fetch and process each chunk range
+    # fetch_data('large_collection', start_id, end_id)
+    pass
