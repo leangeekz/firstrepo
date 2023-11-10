@@ -4,34 +4,41 @@ from pymongo.errors import BulkWriteError
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import datetime
 
-def get_id_ranges(source_collection, num_ranges):
+def get_id_ranges(source_collection, num_ranges, field_name='customerid'):
     """
-    Divide the collection into ranges based on the ObjectId generation time.
+    Divide the collection into ranges based on a specified field.
     """
-    first_id = source_collection.find_one(sort=[("_id", 1)])["_id"]
-    last_id = source_collection.find_one(sort=[("_id", -1)])["_id"]
+    first_doc = source_collection.find_one(sort=[(field_name, 1)])
+    last_doc = source_collection.find_one(sort=[(field_name, -1)])
 
-    first_timestamp = first_id.generation_time
-    last_timestamp = last_id.generation_time
+    if not first_doc or not last_doc:
+        raise ValueError("Collection is empty or field is missing.")
 
-    # Calculate the time interval for each range
-    total_seconds = int((last_timestamp - first_timestamp).total_seconds())
-    seconds_per_range = total_seconds // num_ranges
+    first_id = first_doc[field_name]
+    last_id = last_doc[field_name]
+
+    # Assuming customerid is a string of digits, convert to integer for range calculation
+    first_val = int(first_id)
+    last_val = int(last_id)
+
+    val_range = last_val - first_val
+    range_size = val_range // num_ranges
 
     ranges = []
     for i in range(num_ranges):
-        start_time = first_timestamp + datetime.timedelta(seconds=i * seconds_per_range)
-        end_time = first_timestamp + datetime.timedelta(seconds=(i + 1) * seconds_per_range)
+        start_val = first_val + i * range_size
+        end_val = start_val + range_size
 
-        # Convert times back to ObjectId
-        start_id = ObjectId.from_datetime(start_time)
-        end_id = ObjectId.from_datetime(end_time)
+        # Convert back to string format if necessary
+        start_id = str(start_val)
+        end_id = str(end_val)
 
         ranges.append((start_id, end_id))
 
     # Adjust the last range to include the last_id
     ranges[-1] = (ranges[-1][0], last_id)
     return ranges
+
 
 
 def process_range(start_id, end_id, source_collection, target_collection, job_id, import_job_collection):
