@@ -1,6 +1,26 @@
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 import math
+import numpy as np
+
+def get_id_ranges(source_collection, num_ranges, field_name='customerid', sample_size=1000):
+    # Sample documents from the collection
+    pipeline = [{"$sample": {"size": sample_size}}, {"$project": {field_name: 1}}]
+    sampled_docs = list(source_collection.aggregate(pipeline))
+    sampled_ids = [doc[field_name] for doc in sampled_docs if field_name in doc]
+
+    # Sort the sampled ids
+    sampled_ids.sort()
+
+    # Calculate the range boundaries based on the sorted sample
+    boundaries = [sampled_ids[int(len(sampled_ids) * i / num_ranges)] for i in range(num_ranges)]
+    boundaries.append(sampled_ids[-1])  # Ensure the last value is included
+
+    # Create range pairs
+    ranges = [(boundaries[i], boundaries[i + 1]) for i in range(len(boundaries) - 1)]
+
+    return ranges
+
 
 def get_id_ranges_for_chunks(collection_name, number_of_chunks):
     collection = source_db[collection_name]
