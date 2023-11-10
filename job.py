@@ -4,6 +4,34 @@ from pymongo.errors import BulkWriteError
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import datetime
 
+
+def get_id_ranges(source_collection, num_ranges, field_name='seq_no'):
+    # Get the total number of documents to estimate the average range size
+    total_docs = source_collection.estimated_document_count()
+    avg_range_size = total_docs // num_ranges
+
+    ranges = []
+    last_max_seq_no = None
+
+    for _ in range(num_ranges):
+        query = {}
+        if last_max_seq_no is not None:
+            query[field_name] = {"$gt": last_max_seq_no}
+
+        subrange = source_collection.find(query).sort(field_name, 1).limit(avg_range_size)
+        subrange_seq_nos = [doc[field_name] for doc in subrange]
+
+        if not subrange_seq_nos:
+            break  # No more documents to process
+
+        min_seq_no = subrange_seq_nos[0]
+        max_seq_no = subrange_seq_nos[-1]
+        ranges.append((min_seq_no, max_seq_no))
+
+        last_max_seq_no = max_seq_no
+
+    return ranges
+
 def get_id_ranges(source_collection, num_ranges, field_name='customerid'):
     """
     Divide the collection into ranges based on a specified field.
