@@ -4,6 +4,27 @@ from pymongo.errors import BulkWriteError
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import datetime
 
+def get_id_ranges(source_collection, num_ranges, field_name='seq_no'):
+    first_doc = source_collection.find_one(sort=[(field_name, 1)])
+    last_doc = source_collection.find_one(sort=[(field_name, -1)])
+
+    if not first_doc or not last_doc:
+        raise ValueError("Collection is empty or field is missing.")
+
+    first_seq_no = first_doc[field_name]
+    last_seq_no = last_doc[field_name]
+
+    total_range = last_seq_no - first_seq_no
+    range_size = total_range // num_ranges
+
+    ranges = []
+    for i in range(num_ranges):
+        start_seq_no = first_seq_no + i * range_size
+        end_seq_no = start_seq_no + range_size if i < num_ranges - 1 else last_seq_no + 1
+
+        ranges.append((start_seq_no, end_seq_no))
+
+    return ranges
 
 def get_id_ranges(source_collection, num_ranges, field_name='seq_no'):
     # Get the total number of documents to estimate the average range size
