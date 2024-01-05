@@ -1,52 +1,60 @@
-from pymongo import MongoClient
 import threading
+from pymongo import MongoClient
+from queue import Queue
 
-# Constants - replace with your actual values
-MONGO_URI = 'mongodb://localhost:27017'  # MongoDB URI
-DB_NAME = 'myDatabase'  # Your database name
-COLLECTION_NAME = 'myCollection'  # Your collection name
+# Parameters
+db_name = 'your_db'
+collection_name = 'pipeline_collection'
+num_threads = 10  # Adjust based on your machine's capability and network
 
-# Connect to MongoDB
-client = MongoClient(MONGO_URI)
-db = client[DB_NAME]
-collection = db[COLLECTION_NAME]
+# MongoDB connection setup
+client = MongoClient('mongodb://localhost:27017/')
+db = client[db_name]
+collection = db[collection_name]
 
-# Get min and max _id values
-min_id = collection.find_one(sort=[("_id", 1)])["_id"]
-max_id = collection.find_one(sort=[("_id", -1)])["_id"]
+# Queue to hold the batches of _ids to update
+id_queue = Queue()
 
-def update_records(start_id, end_id):
-    """
-    Update records in the specified _id range.
-    """
-    for doc in collection.find({"_id": {"$gte": start_id, "$lt": end_id}}):
-        # Update operation - Modify according to your update criteria
-        collection.update_one({"_id": doc["_id"]}, {"$set": {"updated": True}})
-        print(f"Updated _id: {doc['_id']}")
+# Function to update documents
+def update_documents():
+    while not id_queue.empty():
+        # Get a batch of _ids from the queue
+        batch = id_queue.get()
+        
+        # Define the update operation here, for example:
+        # update_query = {"$set": {"new_field": "new_value"}}
+        
+        # Update the documents in MongoDB
+        for _id in batch:
+            collection.update_one({'_id': _id}, update_query)
+        
+        # Indicate the task is done
+        id_queue.task_done()
 
-def divide_work(min_id, max_id, num_threads):
-    """
-    Divide the work among threads based on _id range.
-    """
-    range_size = (max_id - min_id) // num_threads
-    threads = []
+# Fill the queue with batches of _ids
+batch_size = 1000  # Adjust based on your preference and performance considerations
+cursor = collection.find({}, {'_id': 1}).batch_size(batch_size)
+current_batch = []
 
-    for i in range(num_threads):
-        # Calculate start and end _ids for each thread
-        start_id = min_id + i * range_size
-        end_id = start_id + range_size if i < num_threads - 1 else max_id + 1
+for document in cursor:
+    current_batch.append(document['_id'])
+    if len(current_batch) >= batch_size:
+        id_queue.put(current_batch)
+        current_batch = []
 
-        # Create and start a thread
-        thread = threading.Thread(target=update_records, args=(start_id, end_id))
-        threads.append(thread)
-        thread.start()
+# Add any remaining _ids
+if current_batch:
+    id_queue.put(current_batch)
 
-    # Wait for all threads to complete
-    for thread in threads:
-        thread.join()
+# Create and start threads
+threads = []
+for i in range(num_threads):
+    thread = threading.Thread(target=update_documents)
+    thread.start()
+    threads.append(thread)
 
-# Number of threads you want to use
-num_threads = 10  # Adjust this to your needs
+# Wait for all threads to complete
+for thread in threads:
+    thread.join()
 
-# Start the threading process
-divide_work(min_id, max_id, num_threads)
+print("Update operation completed.")
