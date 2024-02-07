@@ -1,4 +1,5 @@
 from pymongo import MongoClient
+from bson.objectid import ObjectId
 
 # Configuration for the source MongoDB
 source_db_uri = "mongodb://source_username:source_password@source_host:source_port/source_db_name"
@@ -18,16 +19,31 @@ target_client = MongoClient(target_db_uri)
 target_db = target_client.get_default_database()  # Adjust if your db name is different
 target_collection = target_db[target_collection_name]
 
-# Fetch data from the source collection
-data_to_transfer = list(source_collection.find())
+# Batch processing configuration
+batch_size = 10000  # Number of documents to process in each batch
+last_id = None  # Keeps track of the last document ID processed
 
-# Insert data into the target collection
-if data_to_transfer:
-    target_collection.insert_many(data_to_transfer)
-    print(f"Successfully transferred {len(data_to_transfer)} documents from source to target.")
-else:
-    print("No documents found in source collection.")
+# Function to transfer data in batches
+def transfer_data_in_batches():
+    global last_id
+    while True:
+        query = {"_id": {"$gt": ObjectId(last_id)}} if last_id else {}
+        batch_data = list(source_collection.find(query).limit(batch_size))
+        
+        if not batch_data:
+            break  # Exit the loop if no more data to transfer
+        
+        target_collection.insert_many(batch_data)
+        last_id = batch_data[-1]["_id"]
+        print(f"Transferred {len(batch_data)} documents to target collection.")
 
-# Close the MongoDB connections
-source_client.close()
-target_client.close()
+# Execute the data transfer
+try:
+    transfer_data_in_batches()
+    print("Data transfer complete.")
+except Exception as e:
+    print(f"An error occurred during data transfer: {e}")
+finally:
+    # Close the MongoDB connections
+    source_client.close()
+    target_client.close()
