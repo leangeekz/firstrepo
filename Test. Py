@@ -1,77 +1,33 @@
 from pymongo import MongoClient
-from bson.objectid import ObjectId
-import math
-import numpy as np
 
+# Configuration for the source MongoDB
+source_db_uri = "mongodb://source_username:source_password@source_host:source_port/source_db_name"
+source_collection_name = "source_collection"
 
-def get_id_ranges(source_collection, num_ranges, field_name='seq_no'):
-    first_doc = source_collection.find_one(sort=[(field_name, 1)])
-    last_doc = source_collection.find_one(sort=[(field_name, -1)])
+# Configuration for the target MongoDB
+target_db_uri = "mongodb://target_username:target_password@target_host:target_port/target_db_name"
+target_collection_name = "target_collection"
 
-    if not first_doc or not last_doc:
-        raise ValueError("Collection is empty or field is missing.")
+# Connect to the source MongoDB
+source_client = MongoClient(source_db_uri)
+source_db = source_client.get_default_database()  # Adjust if your db name is different
+source_collection = source_db[source_collection_name]
 
-    first_seq_no = first_doc[field_name]
-    last_seq_no = last_doc[field_name]
+# Connect to the target MongoDB
+target_client = MongoClient(target_db_uri)
+target_db = target_client.get_default_database()  # Adjust if your db name is different
+target_collection = target_db[target_collection_name]
 
-    total_count = last_seq_no - first_seq_no + 1
-    range_size = total_count // num_ranges
+# Fetch data from the source collection
+data_to_transfer = list(source_collection.find())
 
-    ranges = []
-    for i in range(num_ranges):
-        start_seq_no = first_seq_no + i * range_size
-        end_seq_no = start_seq_no + range_size if i < num_ranges - 1 else last_seq_no + 1
+# Insert data into the target collection
+if data_to_transfer:
+    target_collection.insert_many(data_to_transfer)
+    print(f"Successfully transferred {len(data_to_transfer)} documents from source to target.")
+else:
+    print("No documents found in source collection.")
 
-        ranges.append((start_seq_no, end_seq_no))
-
-    return ranges
-
-def get_id_ranges(source_collection, num_ranges, field_name='customerid', sample_size=1000):
-    # Sample documents from the collection
-    pipeline = [{"$sample": {"size": sample_size}}, {"$project": {field_name: 1}}]
-    sampled_docs = list(source_collection.aggregate(pipeline))
-    sampled_ids = [doc[field_name] for doc in sampled_docs if field_name in doc]
-
-    # Sort the sampled ids
-    sampled_ids.sort()
-
-    # Calculate the range boundaries based on the sorted sample
-    boundaries = [sampled_ids[int(len(sampled_ids) * i / num_ranges)] for i in range(num_ranges)]
-    boundaries.append(sampled_ids[-1])  # Ensure the last value is included
-
-    # Create range pairs
-    ranges = [(boundaries[i], boundaries[i + 1]) for i in range(len(boundaries) - 1)]
-
-    return ranges
-
-
-def get_id_ranges_for_chunks(collection_name, number_of_chunks):
-    collection = source_db[collection_name]
-    min_id = collection.find_one(sort=[('_id', 1)])['_id']
-    max_id = collection.find_one(sort=[('_id', -1)])['_id']
-    
-    # Calculate the step size for each chunk
-    step = (max_id.generation_time - min_id.generation_time) / number_of_chunks
-    
-    # Generate the ObjectId for each range
-    ranges = [
-        (
-            ObjectId.from_datetime(min_id.generation_time + step * i),
-            ObjectId.from_datetime(min_id.generation_time + step * (i + 1))
-        )
-        for i in range(number_of_chunks)
-    ]
-    
-    # Make sure the last chunk ends with the max_id
-    ranges[-1] = (ranges[-1][0], max_id)
-    
-    return ranges
-
-# Example usage:
-source_db = MongoClient('mongodb://source_server')['source_database']
-chunk_ranges = get_id_ranges_for_chunks('large_collection', 10)  # Split into 10 chunks
-
-for start_id, end_id in chunk_ranges:
-    # Now you can fetch and process each chunk range
-    # fetch_data('large_collection', start_id, end_id)
-    pass
+# Close the MongoDB connections
+source_client.close()
+target_client.close()
