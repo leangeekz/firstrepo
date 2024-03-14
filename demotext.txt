@@ -1,0 +1,33 @@
+ im very excited to walk you through metrics and show the demo of DATAX 2.0
+
+1. Enhanced UI/UX experience: we have significantly enhanced UI/UX experience with faster response times and making the tool more seamless, intutive and engaging.
+2. we also revolutionized for query builders user experience. Let me open DATAX and take you new query page. The load is very slow and if i build a query i dont have feature to drag and drop the field attributes. Right click and add to query or display attributes. Now we will go to 2.0 and do the smae thing. 1. If you have noticied the query page loaded very fast and i can simply drag and drop the field attributes to query builder.
+
+3. On the technical front we had improved the query performance by 30%. let me show the query performance by running the same public queries in both Sites. 
+
+4. Let me give an example here. We have big releases in bank particularcly during feb and Nov releases. during this time most of our users converge on our platform for test data needs and we will have sheer volume of requets hitting our servers. Now we have noticied that CBWT CIO having the most requests and we want to scale it. if the current Infrastructure we have increase the RAM or CPU and need to involve our Support team to scale it. this may take atleast a month time beavuse of the process. Now i will show you how we can scale the individual components using just a button click. This ability to scale our pods on demand is a testament that our platform is robust, responsive and reliable. No matter what is the demand.
+
+5. development time reduction : New Architecture has been a game changer for us it has significantly reduced the time for adding new features making it easier for developers to work on enhancement.
+
+
+Let me talk about the Current Painpoints of Onbaording the NEW CIOs
+
+1. Firstly Our current Architecture is tighly coupled particularly concering how we can onboard new cios. Our current team is strugging to make changes to the existing code. IN DATAX 2.0 the new Architecture makes the onboarding easy thanks to the new modernized architecture.
+
+2. This week i had attended Enterprise SIAI onboarding calls in which we had a scenario of Sharing DATA across CIO's. Let me take an example . We are onboarding new CIO called GCIBT which uses large commerical bank cards for thier testing and in CBWT we had CCA for consumers, CSB for small business and NCA for large commerical we load this data from TSYS lle's and the same data flows across across CIO;s after the batch runs. The situation araises when CBWT user reserves 12345 accnt_nmbr in CBWT and the when the same account flow to GCIBT the user from GCIBT should not reserve it as it was reserved by someone from CBWT. we need to make sure that reservations are stored in one place to get this feature working. This is just one scenario we may get these type of scenarios more and we have to be ready with solution. datedatdddwith current architecture it very tough to implement. With 2.0 we can easily handle this situation and im already started designing the solution on this requirement.
+
+3. we are facing frequent threshold limit alerts from prod sql server that our ETL jobs when tables are getting locked and this will degrade the performace of the DB. MOngoDB has built in archiecture which can handle concurrent reque
+
+
+
+
+
+Today, I'm excited to share with you a significant milestone that we have achived over past few months, we had embarked our journey not only to envision but also bring it to life a modernized version of DATAX platform. Our Journey began last year when you had visited india , when we presented the DATAX 2.0 deck  with clear reconginition and performance bottlenecks and scalability issues. We had started our POC straighforward yet ambitious to reimagine our datax using cutting edge technologies like Latest UI Framework, Microservices and MongoDB and hosting them on Cloud Platform OpenShift. 
+
+Objectives:
+
+1.Modernization of our technology stack to improve user experience and operational efficiency.
+1.Performance Enhancement to ensure that our data mining queries run faster, making our tool more effective.
+3.Scalability to effortlessly handle growing demand without compromising on performance.
+4.Future-proofing our platform to easily adapt to future technological advancements and business needs.
+
