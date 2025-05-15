@@ -1,1 +1,123 @@
-ttghg
+VDIO Requirements Document
+1. Reconn Scope
+Current Process
+
+Source: An email is received from John Doe containing the DTR (Data Transmission Registration) for the current month.
+Manual Steps:
+The DTR file is manually reviewed.
+Details are extracted into an Excel sheet, which is potentially used as a reference for a master sheet.
+
+
+Objective: Determine if the Excel sheet can serve as a reference for the master sheet and explore automation opportunities.
+
+Scope of Automation
+
+File Upload on VDIO: Automate the process of uploading the DTR file to the VDIO system.
+Scanning and Extraction:
+Implement a scanning mechanism (similar to the existing Scan (C) process) to identify sensitive data in the DTR, such as:
+NPI (Non-Public Information)
+MNPI (Material Non-Public Information)
+HRCI (Highly Restricted Confidential Information)
+Confidential or Proprietary Data
+
+
+Extract relevant details from the DTR and store them in a database.
+
+
+Master Sheet Reference:
+Analyze the Excel sheet generated from the DTR to determine if it can be used as a reference for the master tracker.
+If feasible, integrate the extracted data into the master tracker database directly, eliminating the need for manual Excel handling.
+
+
+
+Proposed Solution
+
+Upload Mechanism: Develop a feature in VDIO to allow users to upload DTR files via a web interface.
+Automated Scanning:
+Use a script to scan the DTR file for sensitive data types (NPI, MNPI, HRCI, etc.).
+Extract key fields (e.g., transmission details, vendor info) and store them in a structured database (e.g., MySQL or PostgreSQL).
+
+
+Database Integration:
+Map the extracted data to the master tracker database schema.
+Validate the Excel sheet's structure to confirm its suitability as a reference for the master tracker.
+
+
+Outcome: The DTR data will be directly integrated into the VDIO system, reducing manual effort and enabling seamless tracking.
+
+
+2. Master Tracker Automation
+Current Process
+
+Manual Creation: Tom manually creates the Master Tracker in Excel, which contains numerous columns and is updated with data from multiple sources:
+APPHQ
+POP UI
+Flagscape
+
+
+Rise Deliverable:
+A SharePoint form (Rise Deliverable) is created manually based on the Master Tracker.
+The form is sent to users, who provide updates.
+The status updates are manually entered back into the Excel sheet.
+
+
+
+Scope of Automation
+
+Eliminate Excel Dependency:
+Replace the Excel-based Master Tracker with a web-based UI for tracking DTRs.
+
+
+Automate Rise Deliverable:
+Convert the SharePoint form (Rise Deliverable) into an Angular-based web application.
+Allow users to update details directly through the new Angular site.
+
+
+Centralized Tracking:
+Store all DTR-related data in a database.
+Integrate data from sources (APPHQ, POP UI, Flagscape) into the new UI for real-time updates.
+
+
+
+Proposed Solution
+
+Web-Based UI:
+Develop a new Angular application to replace the Excel-based Master Tracker.
+Features:
+Display DTR details in a tabular format.
+Allow filtering, sorting, and searching of DTR records.
+Integrate with a backend database to store and retrieve DTR data.
+
+
+
+
+Automated Data Integration:
+Create APIs to pull data from APPHQ, POP UI, and Flagscape into the VDIO database.
+Schedule automated updates to ensure the UI reflects the latest data.
+
+
+Rise Deliverable Automation:
+Migrate the SharePoint form to an Angular-based form within the new UI.
+Features:
+Users can log in to the Angular site to view and update their assigned DTRs.
+Automated notifications (e.g., email) to users when a new Rise Deliverable is assigned.
+Status updates are saved directly to the database, eliminating manual Excel updates.
+
+
+
+
+Outcome:
+A fully automated, web-based system for tracking DTRs.
+Improved efficiency by removing manual Excel and SharePoint processes.
+Enhanced user experience with a modern Angular interface.
+
+
+
+
+Next Steps
+
+Technical Feasibility: Assess the integration capabilities with APPHQ, POP UI, and Flagscape.
+Database Design: Define the schema for storing DTR and Master Tracker data.
+UI/UX Design: Create wireframes for the Angular application.
+Stakeholder Review: Validate the proposed automation scope with John Doe, Tom, and other stakeholders.
+
