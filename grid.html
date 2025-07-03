@@ -1,314 +1,194 @@
-<div>
-  <h3>
-    Row Grouping
-    <small>
-      <a href="https://github.com/swimlane/ngx-datatable/blob/master/demo/basic/row-grouping.component.ts" target="_blank">
-        Source
-      </a>
-    </small>
-  </h3>
-  <ngx-datatable
-    #myTable
-    class='material expandable'
-    [rows]="rows"
-    [groupRowsBy]="'age'"
-    [columnMode]="'force'"
-    [scrollbarH]="true"
-    [headerHeight]="50"
-    [footerHeight]="50"
-    [rowHeight]="40"
-    [limit]="4"
-    [groupExpansionDefault]="true">
-    <!-- Group Header Template -->
-    <ngx-datatable-group-header [rowHeight]="50" #myGroupHeader (toggle)="onDetailToggle($event)">
-      <ng-template let-group="group" let-expanded="expanded" ngx-datatable-group-header-template>
-        <div style="padding-left:5px;">
-          <a
-            href="#"
-            [class.datatable-icon-right]="!expanded"
-            [class.datatable-icon-down]="expanded"
-            title="Expand/Collapse Group"
-            (click)="toggleExpandGroup(group)">
-            <b>Age: {{group.value[0].age}}</b>
-          </a>                          
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML Notification Bell (Pure Static)</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome CSS for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+        }
+        .navbar {
+            padding: 1rem 1.5rem;
+        }
+        .nav-item.dropdown {
+            position: relative;
+        }
+        .dropdown-menu {
+            min-width: 350px; /* Adjust as needed */
+            max-height: 400px; /* Limit height for scroll */
+            overflow-y: auto; /* Enable scrolling */
+            border: none;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            border-radius: 0.75rem;
+            padding: 1rem;
+        }
+        .notification-list .list-group-item {
+            transition: background-color 0.2s ease-in-out;
+            cursor: pointer;
+            border-radius: 0.5rem !important;
+            margin-bottom: 0.5rem;
+            /* The list-group-item itself will now be a Bootstrap row */
+            padding: 0.75rem 1rem; /* Maintain overall padding */
+        }
+        .notification-list .list-group-item:hover {
+            background-color: #e9ecef;
+        }
+        .notification-list .list-group-item.bg-light-blue {
+            background-color: #e0f7fa !important; /* Light blue for unread */
+        }
+        .badge {
+            position: absolute;
+            top: -5px;
+            right: -10px;
+            transform: translate(50%, -50%);
+            font-size: 0.7em;
+            padding: 0.35em 0.6em;
+        }
+        .fa-bell {
+            color: #343a40;
+        }
+        .dropdown-toggle::after {
+            display: none; /* Hide default caret for the bell dropdown */
+        }
+        .notification-item-action {
+            font-size: 0.85em;
+            color: #0d6efd; /* Bootstrap primary blue */
+            text-decoration: none;
+            cursor: pointer;
+            margin-top: 0.25rem;
+            display: inline-block;
+        }
+        .notification-item-action:hover {
+            text-decoration: underline;
+        }
+        /* Custom styles for the new layout */
+        .notify-img {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%; /* Ensure image wrapper takes full height of column */
+        }
+        .notify-img img {
+            flex-shrink: 0;
+            /* Removed margin-right and margin-top from here as col-3 and centering handles it */
+        }
+        .pd-l0 { /* Custom class for padding-left: 0 */
+            padding-left: 0 !important;
+        }
+        .time { /* Custom class for timestamp */
+            font-size: 0.85em; /* Make time slightly smaller */
+            margin-bottom: 0; /* Remove default paragraph margin */
+        }
+        /* Adjustments for the text content within the col-9 */
+        .notification-list .list-group-item .col-9 h6,
+        .notification-list .list-group-item .col-9 p {
+            margin-bottom: 0.25rem; /* Consistent small margin for text elements */
+        }
+        .notification-list .list-group-item .col-9 .d-flex {
+            margin-bottom: 0.1rem; /* Reduce space after name/time line */
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm rounded-bottom">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">LOGO</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="notificationDropdownToggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fa-solid fa-bell fa-lg position-relative"></i>
+                            <!-- Static badge: displays '5' unread notifications -->
+                            <span id="unreadCountBadge" class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle">
+                                5
+                            </span>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-end p-3 shadow-lg rounded" aria-labelledby="notificationDropdownToggle">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="mb-0">Notifications</h6>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle rounded" type="button" id="filterDropdownButton" data-bs-toggle="dropdown" aria-expanded="false">
+                                        All
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-dark rounded" aria-labelledby="filterDropdownButton">
+                                        <li><a class="dropdown-item filter-option" href="#" data-filter="all">All</a></li>
+                                        <li><a class="dropdown-item filter-option" href="#" data-filter="read">Read</a></li>
+                                        <li><a class="dropdown-item filter-option" href="#" data-filter="unread">Unread</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="list-group notification-list" id="notificationList">
+                                <!-- Static Notification Items - Unread -->
+                                <div class="row">
+                                    <div class="col-3 col-sm-3 col-xs-3 d-flex justify-content-center align-items-center">
+                                        <div class="notify-img">
+                                            <img src="https://placehold.co/40x40/FF5733/FFFFFF?text=JD" class="rounded-circle" alt="User Image" width="40" height="40" onerror="this.onerror=null;this.src='https://placehold.co/40x40/CCCCCC/000000?text=NA';"/>
+                                        </div>
+                                    </div>
+                                    <div class="col-9 col-sm-9 col-xs-9 pd-l0">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <h6 class="mb-0 text-dark">John Doe</h6>
+                                            <small class="text-muted">1 hr ago</small>
+                                        </div>
+                                        <p class="mb-1 text-secondary">he had  commented on your post.</p>
+                                       
+                                        <a href="#" class="notification-item-action"  style="float:right">Mark as Read</a>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="row">
+                                    <div class="col-3 col-sm-3 col-xs-3 d-flex justify-content-center align-items-center">
+                                        <div class="notify-img">
+                                            <img src="https://placehold.co/40x40/FF5733/FFFFFF?text=JD" class="rounded-circle" alt="User Image" width="40" height="40" onerror="this.onerror=null;this.src='https://placehold.co/40x40/CCCCCC/000000?text=NA';"/>
+                                        </div>
+                                    </div>
+                                    <div class="col-9 col-sm-9 col-xs-9 pd-l0">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <h6 class="mb-0 text-dark">John Doe</h6>
+                                            <small class="text-muted">1 hr ago</small>
+                                        </div>
+                                        <p class="mb-1 text-secondary">he had  commented on your post.</p>
+                                       
+                                        <a href="#" class="notification-item-action" style="float:right">Mark as Read</a>
+                                    </div>
+                                </div>
+                                <hr>
+                            <div class="text-center mt-3">
+                                <button class="btn btn-sm btn-primary rounded" id="markAllAsReadButton">Mark All As Read</button>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">JOHN DOE</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fa-solid fa-caret-down"></i></a>
+                    </li>
+                </ul>
+            </div>
         </div>
-      </ng-template>
-    </ngx-datatable-group-header>
-    <!-- Row Detail Template -->
-    <ngx-datatable-row-detail [rowHeight]="100" #myDetailRow (toggle)="onDetailToggle($event)">
-      <ng-template let-row="row" let-expanded="expanded" ngx-datatable-row-detail-template>
-        <div style="padding-left:35px;">
-          <div><strong>Address</strong></div>
-          <div>row detail content sample</div>
+    </nav>
+
+    <div class="container mt-4">
+        <h1 class="text-center text-primary">Welcome to your HTML Notification App!</h1>
+        <p class="text-center text-muted">Explore the notification bell in the top right corner.</p>
+        <div class="d-flex justify-content-center align-items-center" style="min-height: 60vh;">
+            <img src="https://placehold.co/400x300/E0F7FA/000000?text=Content+Area" alt="Placeholder Content" class="img-fluid rounded shadow-sm">
         </div>
-      </ng-template>
-    </ngx-datatable-row-detail>
-    <!-- Row Column Template -->
-    <ngx-datatable-column
-      [width]="50"
-      [resizeable]="false"
-      [sortable]="false"
-      [draggable]="false"
-      [canAutoResize]="false">
-      <ng-template let-row="row" let-expanded="expanded" ngx-datatable-cell-template>
-        <a
-          href="javascript:void(0)"
-          [class.datatable-icon-right]="!expanded"
-          [class.datatable-icon-down]="expanded"
-          title="Expand/Collapse Row"
-          (click)="toggleExpandRow(row)">
-        </a>
-      </ng-template>
-    </ngx-datatable-column>
-    <ngx-datatable-column name="Name" prop="name" editable="true"></ngx-datatable-column>
-    <ngx-datatable-column name="Gender" prop="gender"></ngx-datatable-column>
-    <ngx-datatable-column name="Age" prop="age"></ngx-datatable-column>
-    <ngx-datatable-column name="Comment" prop="comment">
-      <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value" let-row="row" 
-      let-group="group" let-rowHeight="rowHeight">           
-        <input autofocus
-          (blur)="updateValue($event, 'comment', rowIndex)"
-          type="text" 
-          name="comment" 
-          [value]="value"/>
-      </ng-template>                
-    </ngx-datatable-column>
-  </ngx-datatable>
-</div>
+    </div>
 
-
-<script>
-  [
-    {
-        "exppayyes": 1,
-        "exppayno": 0,
-        "exppaypending": 0,
-        "source": "Funder",
-        "name": "Ethel Price",
-        "gender": "female",
-        "company": "Johnson, Johnson and Partners, LLC CMP DDC",
-        "age": 22,
-        "comment": "test1",
-        "groupcomment": "group comment test  with multiple lines of text. group comment test  with multiple lines of text."
-    },
-    {
-        "exppayyes": 0,
-        "exppayno": 1,
-        "exppaypending": 0,
-        "source": "Calculated",
-        "name": "Wilder Gonzales",
-        "gender": "male",
-        "company": "Geekko",
-        "age": 22,
-        "comment": "test2",
-        "groupcomment": "group comment test  with multiple lines of text. group comment test  with multiple lines of text."
-    },
-    {
-        "exppayyes": 0,
-        "exppayno": 0,
-        "exppaypending": 1,
-        "source": "Manual",
-        "name": "Georgina Schultz",
-        "gender": "female",
-        "company": "Suretech",
-        "age": 22,
-        "comment": "test3",
-        "groupcomment": "group comment test  with multiple lines of text. group comment test  with multiple lines of text."
-    },
-    {
-        "exppayyes": 0,
-        "exppayno": 0,
-        "exppaypending": 0,
-        "source": "Manual",
-        "name": "Carroll Buchanan",
-        "gender": "male",
-        "company": "Ecosys",
-        "age": 22,
-        "comment": "test4",
-        "groupcomment": "group comment test  with multiple lines of text. group comment test  with multiple lines of text."
-    },    
-    {
-        "exppayyes": 0,
-        "exppayno": 0,
-        "exppaypending": 0,
-        "source": "Funder",
-        "name": "Claudine Neal",
-        "startdate": "01/01/2017",
-        "enddate": "14/01/2017",
-        "gender": "female",
-        "company": "Sealoud",
-        "age": 55,
-        "groupcomment": "group comment test 2",
-        "groupstatus" : ""
-    },
-    {
-        "name": "Beryl Rice",
-        "gender": "female",
-        "company": "Velity",
-        "age": 67
-    },    
-    {
-        "exppayyes": 0,
-        "exppayno": 0,
-        "exppaypending": 0,
-        "source": "Calculated",
-        "name": "Valarie Atkinson",
-        "startdate": "01/01/2017",
-        "enddate": "14/01/2017",        
-        "gender": "female",
-        "company": "Hopeli",
-        "age": 55,
-        "groupcomment": "group comment test 2",
-        "groupstatus" : ""
-    },
-    {
-        "name": "Schroeder Mathews",
-        "gender": "male",
-        "company": "Polarium",
-        "age": 67
-    },
-    {
-        "name": "Lynda Mendoza",
-        "gender": "female",
-        "company": "Dogspa",
-        "age": 10
-    },
-    {
-        "name": "Sarah Massey",
-        "gender": "female",
-        "company": "Bisba",
-        "age": 10
-    },
-    {
-        "name": "Robles Boyle",
-        "gender": "male",
-        "company": "Comtract",
-        "age": 11
-    },
-    {
-        "name": "Evans Hickman",
-        "gender": "male",
-        "company": "Parleynet"
-        ,
-        "age": 11
-    },
-    {
-        "name": "Robles Boyle",
-        "gender": "male",
-        "company": "Comtract",
-        "age": 50
-    },
-    {
-        "name": "Evans Hickman",
-        "gender": "male",
-        "company": "Parleynet"
-        ,
-        "age": 50
-    },
-    {
-        "name": "Robles Boyle",
-        "gender": "male",
-        "company": "Comtract",
-        "age": 51
-    },
-    {
-        "name": "Evans Hickman",
-        "gender": "male",
-        "company": "Parleynet"
-        ,
-        "age": 51
-    },    
-    {
-        "name": "Robles Boyle",
-        "gender": "male",
-        "company": "Comtract",
-        "age": 52,
-        "groupcomment": "group comment test  with multiple lines of text. group comment test  with multiple lines of text."        
-    },
-    {
-        "name": "Evans Hickman",
-        "gender": "male",
-        "company": "Parleynet",
-        "age": 52,
-        "groupcomment": "group comment test  with multiple lines of text. group comment test  with multiple lines of text."        
-    },        
-    {
-        "name": "Dawson Barber",
-        "gender": "male",
-        "company": "Dymi",
-        "age": 12,
-        "groupcomment": "group comment test  with multiple lines of text. group comment test  with multiple lines of text."                
-    },
-    {
-        "name": "Robles Boyle",
-        "gender": "male",
-        "company": "Comtract",
-        "age": 53,
-        "groupcomment": "group comment test  with multiple lines of text."
-    },
-    {
-        "name": "Evans Hickman",
-        "gender": "male",
-        "company": "Parleynet",
-        "age": 53,
-        "groupcomment": "group comment test  with multiple lines of text."        
-    },        
-    {
-        "name": "Robles Boyle",
-        "gender": "male",
-        "company": "Comtract",
-        "age": 54
-    },
-    {
-        "name": "Evans Hickman",
-        "gender": "male",
-        "company": "Parleynet"
-        ,
-        "age": 54
-    },        
-    {
-        "name": "Robles Boyle",
-        "gender": "male",
-        "company": "Comtract",
-        "age": 56
-    },
-    {
-        "name": "Evans Hickman",
-        "gender": "male",
-        "company": "Parleynet",
-        "age": 56
-    },        
-    {
-        "name": "Bruce Strong",
-        "gender": "male",
-        "company": "Xyqag",
-        "age": 12
-    },        
-    {
-        "name": "No Group1",
-        "gender": "male",
-        "company": "Xyqag",
-        "age": null
-    },
-    {
-        "name": "No Group2",
-        "gender": "male",
-        "company": "Xyqag",
-        "age": null
-    },
-    {
-        "name": "No Group3",
-        "gender": "male",
-        "company": "Xyqag",
-        "age": null
-    },
-    {
-        "name": "No Group4",
-        "gender": "male",
-        "company": "Xyqag",
-        "age": null
-    }
-    
-]
-
-</script>
+    <!-- Bootstrap 5 JS Bundle (includes Popper) - Required for Bootstrap's dropdown functionality -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- No custom JavaScript here -->
+</body>
+</html>
